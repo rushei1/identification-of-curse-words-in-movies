@@ -1,0 +1,21 @@
+# source: code-new/final_gpu.py:31-34, code-new/app.py:28-31 (legacy hard-coded set, order preserved)
+damn
+hell
+shit
+fuck
+bitch
+bastard
+ass
+crap
+dick
+pussy
+son of a bitch
+jerk
+freak
+screw
+moron
+idiot
+dumb
+nuts
+sucks
+heck

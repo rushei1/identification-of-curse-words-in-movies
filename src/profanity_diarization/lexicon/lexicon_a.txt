@@ -1,0 +1,21 @@
+# source: Code/final.py:51-54 (legacy hard-coded set, order preserved)
+damn
+hell
+shit
+fuck
+bitch
+bastard
+ass
+crap
+dick
+piss
+son of a bitch
+jerk
+freak
+screw
+moron
+idiot
+dumb
+nuts
+sucks
+heck
