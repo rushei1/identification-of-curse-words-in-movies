@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "profanity-diarization"
+version = "0.1.0"
+description = "Offline profanity detection and speaker diarization for movies/video clips (Whisper + pyannote)"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+dependencies = ["pydantic>=2", "pyyaml", "typer>=0.9"]
+
+[project.optional-dependencies]
+# heavy model stack; tests never need it
+models = ["openai-whisper==20240930", "pyannote.audio==3.3.2", "torch", "torchaudio", "nltk", "huggingface_hub"]
+dev = ["pytest", "pytest-cov", "ruff"]
+
+[project.scripts]
+profanity-diarization = "profanity_diarization.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+profanity_diarization = ["presets/*.yaml", "lexicon/*.txt"]
+
+[tool.pytest.ini_options]
+addopts = "-m 'not slow and not models'"
+markers = ["slow: slow tests", "models: needs real models/network"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
