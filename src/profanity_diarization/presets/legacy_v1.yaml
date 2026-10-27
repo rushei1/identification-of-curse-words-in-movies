@@ -1,0 +1,7 @@
+# Earlier scripts (Code/final.py, final_1.py): exact match, no lemmatization, lexicon A.
+whisper_model: small
+language: en
+diarization_model: pyannote/speaker-diarization
+lemmatize: false          # final.py:92 only strips punctuation
+speaker_labels: paper_gender
+lexicon: lexicon_a        # bundled lexicon_a.txt (final.py:51-54)

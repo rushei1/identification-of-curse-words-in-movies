@@ -1,0 +1,7 @@
+# Exact legacy defaults (code-new/final_gpu.py, the file named in the paper, section 3.2).
+whisper_model: small                              # final_gpu.py:21 whisper.load_model("small")
+language: en                                      # final_gpu.py:70 transcribe(..., language="en")
+diarization_model: pyannote/speaker-diarization   # final_gpu.py:25
+lemmatize: true                                   # final_gpu.py:99 lemmatize(word, pos="v")
+speaker_labels: paper_gender                      # final_gpu.py:74-80 SPEAKER_01 -> FEMALE heuristic
+lexicon: null                                     # bundled lexicon_b.txt (final_gpu.py:31-34)
