@@ -190,34 +190,46 @@ Both models run on the same inputs and the same Whisper `small`, differing only 
 | Real clip 1: diarization time | 360 s | 153 s (2.4x faster) |
 | Real clip 1: ASR time | 70 s | 198 s (2.8x slower: more, shorter turns) |
 | Real clip 1: wall time | 7 min 17 s | 5 min 59 s |
-| Real clip 1: profane words present in the transcript | 13 of 13 | **10 of 13** |
+| Real clip 1: profane words present in the transcript* | 13 of 13 | **10 of 13** |
 | Real clip 1: end-to-end recall, `paper` matching | 10/13 = 76.9% | 7/13 = 53.8% |
 | Real clip 1: end-to-end recall, `improved` matching | 13/13 = 100% | 10/13 = 76.9% |
 | Real clip 1: token-level F1, `paper` / `improved` | 87.0% / 100% | 82.4% / 100% |
-| Real clip 2 (392 s) | see note | see note |
+| Real clip 2: speaker labels / turns | 2 / 69 (19 under 1 s) | 2 / 120 (52 under 1 s) |
+| Real clip 2: diarization / ASR time | not recorded | 413 s / 435 s |
+| Real clip 2: profane words present in the transcript* | 32 of 32 | 31 of 32 |
+| Real clip 2: end-to-end recall, `paper` / `improved` matching | 28/32 = 87.5% / 32/32 = 100% | 27/32 = 84.4% / 31/32 = 96.9% |
+| Real clip 2: token-level F1, `paper` / `improved` | 88.9% / 95.5% | 88.5% / 95.4% |
 | Synthetic (known truth): speakers found / true | 2 / 2 | 2 / 2 |
 | Synthetic: speaker purity | 100% | 100% |
 | Synthetic: diarization time | 247 s | 113 s |
 | Synthetic: turns | 25 | 27 |
 
-*Note, real clip 2:* the original diarizer found two speakers (father, daughter) with 69 turns and was used
-for the detection table above. The 3.1 run on this clip was still in progress when this README was
-written; see [`docs/PROGRESS.md`](docs/PROGRESS.md) for the result once recorded.
+\* "Present in the transcript" is counted against the profane words of the hand-labelled **original** run, so the
+original column is 100% by construction. It measures what 3.1 *loses relative to the original*, not what
+Whisper missed in absolute terms. "End-to-end recall" divides detected words by those same gold counts.
 
 How to read the gap:
 
-- **3.1 is faster at diarizing but worse for this pipeline.** It cuts the audio into many short turns.
-  Because this method transcribes each turn on its own, short turns give Whisper little context and
-  words that straddle a boundary are lost. On real clip 1, 3 of the 13 profane words never reach the
-  transcript, which no downstream matcher can recover. Token-level F1 is computed on the transcript, so it
-  hides that loss; the end-to-end recall rows show it.
+- **3.1 cuts the audio into more, shorter turns** (30 vs 15 on clip 1, 120 vs 69 on clip 2). Because this
+  method transcribes each turn on its own, short turns give Whisper little context and words that
+  straddle a boundary can be lost. The damage depends on the clip: on the fast-cut trailer 3 of 13
+  profane words never reach the transcript; on the interview only 1 of 32. A word lost before the detector
+  cannot be recovered by any matcher. Token-level F1 is computed on the transcript, so it barely moves
+  (88.9% -> 88.5%, 95.5% -> 95.4% on clip 2); the end-to-end recall rows show the loss.
+- **Speed is mixed.** 3.1 diarized the trailer 2.4x faster but its extra turns made ASR 2.8x slower, so it was
+  faster overall on clip 1 (5 min 59 s vs 7 min 17 s). On clip 2 it took 413 s + 435 s (about 14 min for 392 s
+  of video); the original diarizer's time on that clip was not recorded, so there is no comparison.
+- **3.1 separated the two people on clip 2 correctly** (label `SPEAKER_00` = the daughter, `SPEAKER_01` = the
+  father), as did the original diarizer (with the labels the other way round).
 - **Neither model separated the trailer's speakers correctly.** Both return 3 labels for a clip with many
   more voices, so a label does not equal a person. On a clean two-voice synthetic clip both are perfect;
   that clip is easy and says little about real films.
 - **No diarization error rate (DER) was measured** on real data: that needs reference RTTM annotations,
   which this repo does not have yet.
-- On this evidence (one real clip plus the synthetic clip), `improved31` is **not recommended** over
-  `improved` for this per-turn design until short turns are merged or transcription is made turn-independent.
+- **Verdict so far (two real clips, one synthetic):** no clear win for 3.1 in this per-turn design. It is
+  equal or slightly worse on end-to-end recall (3 to 23 points lower depending on matcher and clip) and only
+  sometimes faster. `improved` (original diarizer) stays the recommended preset; 3.1 becomes attractive if
+  very short turns are merged before transcription, which is not implemented yet.
 
 ### 3. Speaker "gender": the paper rule vs voice pitch
 
@@ -245,6 +257,9 @@ the (male) narrator's turns were labelled FEMALE.
   the 400 Hz search limit (music/noise). On real clip 2, where the original diarizer cleanly separated the two
   people, the paper rule happened to be right (4 FEMALE hits) and per-turn pitch moved some of the
   father's turns to FEMALE (9 FEMALE hits instead of 4), so per-turn pitch can be **worse** than the label rule when diarization is clean.
+- With the 3.1 diarizer on clip 2, the daughter's label was FEMALE in 18 of 20 turns (2 `UNKNOWN`) and the
+  father's was MALE in 75, FEMALE in 11 and `UNKNOWN` in 14 turns, so about 13% of the father's decided turns
+  still flip. Clip 2 has no hand-checked gender labels, so none of these are accuracies.
 - A speaker-smoothing variant (`gender.smooth_by_speaker`) exists but is not wired in until data says it helps.
 - To measure it: open `eval/data/gender_template.csv` (created by `python -m eval.gender_eval template`), fill
   `true_gender` (M/F) for turns you can verify against the video, then run `python -m eval.gender_eval score`.
