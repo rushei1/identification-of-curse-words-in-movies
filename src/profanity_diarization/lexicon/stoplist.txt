@@ -1,0 +1,9 @@
+# innocent words that contain a stem; never flagged by stem matching
+scunthorpe
+dickens
+dickensian
+dickinson
+dickson
+benedick
+pissarro
+shitake

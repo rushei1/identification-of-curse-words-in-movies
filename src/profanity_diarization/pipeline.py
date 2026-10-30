@@ -15,7 +15,7 @@ from .asr import Transcriber, WhisperTranscriber, to_segments, transcribe_turns
 from .audio import extract_audio
 from .config import Settings
 from .diarize import Diarizer, PyannoteDiarizer
-from .profanity import Detector, counts, load_lexicon, verb_lemmatizer
+from .profanity import Detector, build_detector, counts
 from .schemas import Report, Turn
 from .speakers import SpeakerGrouper
 
@@ -60,8 +60,7 @@ class Pipeline:
     @property
     def detector(self) -> Detector:
         if self._detector is None:
-            lemma = verb_lemmatizer() if self.cfg.lemmatize else (lambda w: w)
-            self._detector = Detector(load_lexicon(self.cfg.lexicon), lemma)
+            self._detector = build_detector(self.cfg)
         return self._detector
 
     def _stage(self, name, cache: Path, cfg_part, fn):

@@ -1,0 +1,10 @@
+# Opt-in improvements over `paper` (paper output is unchanged). Same models/lexicon as paper;
+# only the matching differs: stem matching for compounds/plurals (with an innocent-word
+# stoplist) and whole-phrase matching (fixes the "son of a b****" entry that can never match).
+whisper_model: small
+language: en
+diarization_model: pyannote/speaker-diarization
+lemmatize: true
+speaker_labels: paper_gender
+lexicon: null
+match: improved

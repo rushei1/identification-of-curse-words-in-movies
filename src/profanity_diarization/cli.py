@@ -100,12 +100,12 @@ def prefetch(preset: str = "paper"):
 def report(json_file: Path, output_dir: Optional[Path] = None):
     """Re-render CSV/SRT/Markdown from a saved JSON report."""
     from .config import Settings
-    from .profanity import Detector, load_lexicon, verb_lemmatizer
+    from .profanity import build_detector
     from .schemas import Report
 
     r = Report.model_validate_json(json_file.read_text(encoding="utf-8"))
     cfg = Settings(**r.config)
-    det = Detector(load_lexicon(cfg.lexicon), verb_lemmatizer() if cfg.lemmatize else (lambda w: w))
+    det = build_detector(cfg)
     pipe = Pipeline(cfg, transcriber=object(), diarizer=object(), detector=det)
     for p in pipe.write_outputs(r, output_dir or json_file.parent, json_file.stem):
         typer.echo(p)

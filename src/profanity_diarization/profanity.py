@@ -42,23 +42,49 @@ def normalize(token: str, lemma: Callable[[str], str] = lambda w: w) -> str:
 
 
 class Detector:
-    def __init__(self, lexicon: frozenset, lemma: Callable[[str], str] = lambda w: w):
+    """Defaults reproduce the paper rule. ``stems``/``stoplist``/``phrases`` are opt-in."""
+
+    def __init__(self, lexicon: frozenset, lemma: Callable[[str], str] = lambda w: w,
+                 stems: frozenset = frozenset(), stoplist: frozenset = frozenset(),
+                 phrases: bool = False):  # fmt: skip
         self.lexicon, self.lemma = lexicon, lemma
+        self.stems, self.stoplist, self.phrases = stems, stoplist, phrases
+        self._phrases = [p.split() for p in lexicon if " " in p] if phrases else []
 
     def match(self, token: str) -> Optional[str]:
         n = normalize(token, self.lemma)
-        return n if n in self.lexicon else None
+        if n in self.lexicon:
+            return n
+        if self.stems:  # opt-in: stem inside the token, unless it is a known innocent word
+            for cand in (normalize(token), n):
+                if cand not in self.stoplist:
+                    for st in self.stems:
+                        if st in cand:
+                            return st
+        return None
+
+    def _phrase_at(self, toks: list[str], i: int) -> Optional[list[str]]:
+        for ph in self._phrases:
+            if [normalize(t) for t in toks[i : i + len(ph)]] == ph:
+                return ph
+        return None
 
     def detect(self, segments: list[Segment]) -> list[ProfanityHit]:
         hits = []
         for s in segments:
-            for tok in s.text.lower().split():
-                term = self.match(tok)
+            toks, i = s.text.lower().split(), 0
+            while i < len(toks):
+                ph = self._phrase_at(toks, i) if self._phrases else None
+                term = " ".join(ph) if ph else self.match(toks[i])
                 if term:
+                    n = len(ph) if ph else 1
                     hits.append(
-                        ProfanityHit(term=term, token=tok, speaker=s.speaker, group=s.group,
-                                     start=s.start, end=s.end, context=s.text)  # fmt: skip
+                        ProfanityHit(term=term, token=" ".join(toks[i : i + n]), speaker=s.speaker,
+                                     group=s.group, start=s.start, end=s.end, context=s.text)  # fmt: skip
                     )
+                    i += n
+                else:
+                    i += 1
         return hits
 
     def mask(self, text: str) -> str:
@@ -69,6 +95,15 @@ class Detector:
             return tok[0] + "***" if self.match(tok) else tok
 
         return re.sub(r"\S+", sub, text)
+
+
+def build_detector(cfg) -> "Detector":
+    """Detector for a Settings object (``match`` = exact | improved)."""
+    lemma = verb_lemmatizer() if cfg.lemmatize else (lambda w: w)
+    lex = load_lexicon(cfg.lexicon)
+    if cfg.match == "improved":
+        return Detector(lex, lemma, load_lexicon("stems"), load_lexicon("stoplist"), phrases=True)
+    return Detector(lex, lemma)
 
 
 def counts(hits: list[ProfanityHit], groups: list[str]) -> tuple:

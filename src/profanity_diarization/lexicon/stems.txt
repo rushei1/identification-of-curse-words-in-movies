@@ -1,0 +1,10 @@
+# stems matched inside a token (compounds/plurals: mother-f***ers, horse-s***). Improved preset only.
+fuck
+shit
+bitch
+cunt
+dick
+piss
+pussy
+bastard
+asshole
