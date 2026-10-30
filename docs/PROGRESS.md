@@ -32,6 +32,8 @@ See `AUDIT.md` D1-D8. Additions found by running things:
 - **D9**: under the paper's verb lemmatization, lexicon entries `nuts` and `sucks` can never match (`sucks` -> `suck`), in addition to the multi-word entry `son of a b****`. Kept in `paper`.
 - **D10**: lexicon B has no `piss` (replaced by a different term vs lexicon A), so "piss" is missed by `paper`.
 - **D11**: the `SPEAKER_01 -> FEMALE` heuristic is order/label based, not gender: on the synthetic set the **male** TTS voice was assigned `SPEAKER_01` and reported as FEMALE. The paper's gender-level claims are not supported by this mechanism.
+  - Opt-in fix added: `speaker_labels: pitch_gender` (in `improved`) classifies each *turn* by median F0 (threshold 165 Hz, `UNKNOWN` when too little voiced audio). Measured: **25/25** correct on the synthetic clip (paper rule: 0/25). **Not validated on real audio.** On the Netflix trailer 6/15 turns sit at 156-172 Hz (ambiguous) and one at 400 Hz (search limit); on the New Yorker clip (clean 2-speaker diarization) the paper rule is coincidentally right and per-turn pitch flips some of the father's turns to FEMALE (FEMALE 9 vs 4), so per-turn pitch can be *worse* than the label rule when diarization is clean. A speaker-smoothed variant exists (`gender.smooth_by_speaker`, not wired into the pipeline) pending hand labels: fill `eval/data/gender_template.csv` and run `python -m eval.gender_eval score`.
+  - Diarization itself merges several real speakers into one label on the trailer (3 labels), which no gender rule can undo at speaker level.
 - **D12**: overlapping diarization turns are transcribed twice (seen on clip 1 at ~66-68 s). Not fixed (opt-in work pending).
 - Whisper can hallucinate on silence/music (clip 2 segment 47 is garbled text).
 
