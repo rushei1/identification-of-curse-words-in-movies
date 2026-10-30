@@ -2,7 +2,7 @@
 
 Unit: **token** (whitespace-split ASR output); *profane* is the positive class. Accuracy is dominated by true negatives (most words are not profane), so read precision, recall and F1 first. All profane terms are masked.
 
-Run: 2026-10-30T20:29:35.085751+00:00 | Python 3.9.13 | Windows-10-10.0.26300-SP0
+Run: 2026-10-30T20:36:21.597931+00:00 | Python 3.9.13 | Windows-10-10.0.26300-SP0
 
 ## Headline: real clips pooled (sample-video + newyorker)
 
@@ -39,6 +39,20 @@ Stage time (CPU): audio 0s, diarize 153s, asr 198s
 Stage time: not recorded (report rebuilt from the stage cache).
 
 - **paper** false positives: {'d***': 1, 's***': 1, 'h***': 1}; false negatives: {'f***': 3, 'M***': 1}
+- **improved** false positives: {'d***': 1, 's***': 1, 'h***': 1}; false negatives: none
+
+## newyorker_d31
+
+822 tokens, 31 gold-positive. Labels by: derived: a token is positive iff its normalized form is a gold form of the hand-labeled run with the original diarizer. Real clip 2 re-transcribed with the pyannote 3.1 diarizer (different turn boundaries, so index labels do not apply).
+
+| Preset | TP | FP | FN | TN | Accuracy | Precision | Recall | F1 | Specificity | FPR | FNR |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| paper | 27 | 3 | 4 | 788 | 99.1% | 90.0% | 87.1% | 88.5% | 99.6% | 0.4% | 12.9% |
+| improved | 31 | 3 | 0 | 788 | 99.6% | 91.2% | 100.0% | 95.4% | 99.6% | 0.4% | 0.0% |
+
+Stage time (CPU): audio 0s, diarize 413s, asr 435s
+
+- **paper** false positives: {'d***': 1, 's***': 1, 'h***': 1}; false negatives: {'f***': 3, 'm***': 1}
 - **improved** false positives: {'d***': 1, 's***': 1, 'h***': 1}; false negatives: none
 
 ## sample-video
