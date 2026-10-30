@@ -17,7 +17,18 @@ app = typer.Typer(add_completion=False, help="Profanity detection + speaker diar
 MEDIA = {".mp4", ".mkv", ".mov", ".avi", ".webm", ".wav", ".mp3", ".m4a", ".flac", ".ogg"}
 
 
+def load_dotenv(path: Path = Path(".env")) -> None:
+    """KEY=VALUE lines from ./.env into os.environ (existing variables win). No dependency."""
+    if not path.is_file():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        k, sep, v = line.strip().partition("=")
+        if sep and k and not k.startswith("#"):
+            os.environ.setdefault(k.strip(), v.strip().strip("\"'"))
+
+
 def _setup(preset, device, offline, keep, verbose=True):
+    load_dotenv()
     logging.basicConfig(level=logging.INFO if verbose else logging.WARNING,
                         format="%(levelname)s %(message)s")  # fmt: skip
     if offline:
