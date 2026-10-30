@@ -23,6 +23,7 @@ class Segment(BaseModel):
     start: float
     end: float
     text: str
+    f0: Optional[float] = None  # median pitch (Hz) when speaker_labels=pitch_gender
 
 
 class ProfanityHit(BaseModel):

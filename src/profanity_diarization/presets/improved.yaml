@@ -5,6 +5,6 @@ whisper_model: small
 language: en
 diarization_model: pyannote/speaker-diarization
 lemmatize: true
-speaker_labels: paper_gender
+speaker_labels: pitch_gender   # per-turn voice pitch instead of the SPEAKER_01 label rule
 lexicon: null
 match: improved

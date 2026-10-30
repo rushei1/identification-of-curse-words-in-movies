@@ -15,6 +15,7 @@ from .asr import Transcriber, WhisperTranscriber, to_segments, transcribe_turns
 from .audio import extract_audio
 from .config import Settings
 from .diarize import Diarizer, PyannoteDiarizer
+from .gender import turn_gender
 from .profanity import Detector, build_detector, counts
 from .schemas import Report, Turn
 from .speakers import SpeakerGrouper
@@ -102,11 +103,18 @@ class Pipeline:
             "asr", cache, [ih, c.diarization_model, c.whisper_model, c.language],
             lambda: [x for _, x in transcribe_turns(self.transcriber, wav, turns, cache / "tmp")],
         )  # fmt: skip
-        segs = to_segments(list(zip(turns, texts)), SpeakerGrouper(c.speaker_labels))
+        if c.speaker_labels == "pitch_gender":  # per TURN, from the audio (not per speaker label)
+            tg = [turn_gender(wav, t.start, t.end) for t in turns]
+            tgroups, f0s = [g for g, _ in tg], [f for _, f in tg]
+        else:
+            grouper = SpeakerGrouper(c.speaker_labels)
+            tgroups, f0s = [grouper(t.speaker) for t in turns], None
+        segs = to_segments(list(zip(turns, texts)), tgroups, f0s)
         hits = self.detector.detect(segs)
-        groups = ["MALE", "FEMALE"] if c.speaker_labels == "paper_gender" else sorted(
-            {s.group for s in segs}
-        )
+        groups = {
+            "paper_gender": ["MALE", "FEMALE"],
+            "pitch_gender": ["MALE", "FEMALE", "UNKNOWN"],
+        }.get(c.speaker_labels) or sorted({s.group for s in segs})
         tot, uniq = counts(hits, groups)
         if not c.keep_intermediate:
             wav.unlink(missing_ok=True)

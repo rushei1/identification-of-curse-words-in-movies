@@ -20,7 +20,7 @@ class Settings(BaseModel):
     lexicon: Optional[str] = None  # path; None = bundled lexicon_b
     lemmatize: bool = True  # lemmatize(pos="v"), as final_gpu.py
     match: Literal["exact", "improved"] = "exact"  # exact = paper rule
-    speaker_labels: Literal["paper_gender", "raw"] = "paper_gender"
+    speaker_labels: Literal["paper_gender", "raw", "pitch_gender"] = "paper_gender"
     offline: bool = False
     keep_intermediate: bool = False
 

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Callable, Optional, Protocol
+from typing import Optional, Protocol
 
 from .audio import slice_wav
 from .schemas import Segment, Turn
@@ -48,11 +48,11 @@ def transcribe_turns(
     return out
 
 
-def to_segments(rows: list[tuple[Turn, str]], group_of: Callable[[str], str]) -> list[Segment]:
-    """Keep only non-empty text (legacy ``if text:``). Group assignment is in turn order."""
-    segs = []
-    for t, x in rows:
-        g = group_of(t.speaker)  # legacy assigns the group even for empty text
-        if x:
-            segs.append(Segment(speaker=t.speaker, group=g, start=t.start, end=t.end, text=x))
-    return segs
+def to_segments(rows: list[tuple[Turn, str]], groups: list, f0s: Optional[list] = None) -> list[Segment]:
+    """Keep only non-empty text (legacy ``if text:``). ``groups[i]`` belongs to ``rows[i]``."""
+    f0s = f0s or [None] * len(rows)
+    return [
+        Segment(speaker=t.speaker, group=g, start=t.start, end=t.end, text=x, f0=f)
+        for (t, x), g, f in zip(rows, groups, f0s)
+        if x
+    ]
