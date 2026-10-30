@@ -163,3 +163,28 @@ def test_smooth_by_speaker_and_gender_score(tmp_path):
     assert r["paper_rule"]["correct"] == 0 and r["paper_rule"]["decided"] == 3
     assert r["pitch_per_turn"]["abstained"] == 1 and r["pitch_per_turn"]["correct"] == 1
     assert r["pitch_smoothed"]["correct"] == 2
+
+
+def test_diar_eval_purity_and_gender():
+    from eval.diar_eval import evaluate
+
+    truth = [(0, 2, "MALE"), (3, 5, "FEMALE")]
+    segs = [{"speaker": "A", "start": 0, "end": 2}, {"speaker": "A", "start": 3, "end": 5}]  # lumped
+    r = evaluate(segs, {"m": ["MALE", "MALE"]}, truth)
+    assert r["speakers_found"] == 1 and r["purity"] == 0.5
+    assert r["gender"]["m"]["time_weighted_accuracy"] == 0.5
+
+
+def test_load_dotenv_does_not_override_existing(tmp_path, monkeypatch):
+    from profanity_diarization.cli import load_dotenv
+
+    f = tmp_path / ".env"
+    f.write_text('# c\nHF_TOKEN=abc\nOTHER="x y"\nKEEP=new\n', encoding="utf-8")
+    monkeypatch.delenv("HF_TOKEN", raising=False)
+    monkeypatch.delenv("OTHER", raising=False)
+    monkeypatch.setenv("KEEP", "old")
+    load_dotenv(f)
+    import os
+
+    assert os.environ["HF_TOKEN"] == "abc" and os.environ["OTHER"] == "x y" and os.environ["KEEP"] == "old"
+    load_dotenv(tmp_path / "missing.env")  # no file: no error
