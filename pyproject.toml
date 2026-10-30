@@ -9,12 +9,22 @@ description = "Offline profanity detection and speaker diarization for movies/vi
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
-dependencies = ["pydantic>=2", "pyyaml", "typer>=0.9"]
+authors = [{ name = "Rusheil Singh Baath" }]
+keywords = ["whisper", "pyannote", "speaker-diarization", "speech-to-text", "profanity-detection", "content-moderation", "offline"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Topic :: Multimedia :: Sound/Audio :: Speech",
+]
+dependencies = ["pydantic>=2", "pyyaml", "typer>=0.9", "numpy"]
 
 [project.optional-dependencies]
 # heavy model stack; tests never need it
 models = ["openai-whisper==20240930", "pyannote.audio==3.3.2", "torch", "torchaudio", "nltk", "huggingface_hub"]
 dev = ["pytest", "pytest-cov", "ruff"]
+
+[project.urls]
+Paper = "https://doi.org/g9kfph"
 
 [project.scripts]
 profanity-diarization = "profanity_diarization.cli:app"
@@ -32,7 +42,11 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 100
+target-version = "py39"
 src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+# E501: long lines are left to ruff format. UP045: pydantic/typer evaluate annotations at runtime,
+# so `X | None` would break Python 3.9.
+ignore = ["E501", "UP045"]

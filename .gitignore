@@ -19,3 +19,20 @@ eval/data/
 eval/results/*.json
 output/
 output*/
+# media and model files must never be committed (copyrighted / large)
+*.mov
+*.avi
+*.webm
+*.m4a
+*.flac
+*.ogg
+*.pt
+*.ckpt
+*.safetensors
+# tooling
+.DS_Store
+htmlcov/
+.mypy_cache/
+build/
+Thumbs.db
+input/
