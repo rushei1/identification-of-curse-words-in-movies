@@ -2,7 +2,7 @@
 
 Unit: **token** (whitespace-split ASR output); *profane* is the positive class. Accuracy is dominated by true negatives (most words are not profane), so read precision, recall and F1 first. All profane terms are masked.
 
-Run: 2026-10-30T15:48:02.983579+00:00 | Python 3.9.13 | Windows-10-10.0.26300-SP0
+Run: 2026-10-30T20:29:35.085751+00:00 | Python 3.9.13 | Windows-10-10.0.26300-SP0
 
 ## Headline: real clips pooled (sample-video + newyorker)
 
@@ -12,6 +12,20 @@ Run: 2026-10-30T15:48:02.983579+00:00 | Python 3.9.13 | Windows-10-10.0.26300-SP
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | paper | 38 | 3 | 7 | 1073 | 99.1% | 92.7% | 84.4% | 88.4% | 99.7% | 0.3% | 15.6% |
 | improved | 45 | 3 | 0 | 1073 | 99.7% | 93.8% | 100.0% | 96.8% | 99.7% | 0.3% | 0.0% |
+
+## netflix_d31
+
+273 tokens, 10 gold-positive. Labels by: derived: a token is positive iff its normalized form is a gold form of the hand-labeled run with the original diarizer. Netflix trailer re-transcribed with the pyannote 3.1 diarizer (different turn boundaries, so index labels do not apply). Gold token count here vs 13 in the original run shows how many profane words ASR still produced.
+
+| Preset | TP | FP | FN | TN | Accuracy | Precision | Recall | F1 | Specificity | FPR | FNR |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| paper | 7 | 0 | 3 | 263 | 98.9% | 100.0% | 70.0% | 82.4% | 100.0% | 0.0% | 30.0% |
+| improved | 10 | 0 | 0 | 263 | 100.0% | 100.0% | 100.0% | 100.0% | 100.0% | 0.0% | 0.0% |
+
+Stage time (CPU): audio 0s, diarize 153s, asr 198s
+
+- **paper** false positives: none; false negatives: {'h***': 1, 'c***': 1, 'M***': 1}
+- **improved** false positives: none; false negatives: none
 
 ## newyorker
 
@@ -61,6 +75,13 @@ Stage time (CPU): audio 0s, diarize 247s, asr 107s
 - **False positives** are lexicon words used in a mild or literal sense (`screwed`, `*** `*** `*** and names (a surname or a book title). Neither preset uses context, so `improved` does not reduce them.
 - Gold labels cover **detection on the ASR output**. Words Whisper mis-hears or drops are invisible to this metric; the synthetic set reports how many scripted words ASR recognised.
 - Token-level counts differ from the paper's hit counting only for multi-word phrases.
+
+## Diarizer comparison on the synthetic clip (truth known)
+
+| Diarizer | Speakers found / true | Turns | Purity | Gender: paper rule | Gender: pitch per turn |
+|---|---|---|---|---|---|
+| pyannote/speaker-diarization (paper) | 2 / 2 | 25 | 100.0% | 0.0% | 100.0% |
+| pyannote/speaker-diarization-3.1 | 2 / 2 | 27 | 100.0% | 100.0% | 100.0% |
 
 ## Not run
 
