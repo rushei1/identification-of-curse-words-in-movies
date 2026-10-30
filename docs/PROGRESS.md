@@ -1,6 +1,6 @@
 # Progress
 
-Legacy dir: `F:\Projects\identification_of_cuss_words` (read-only). Repo: this folder, nested inside it by the owner's choice.
+Legacy dir: the author's original scattered project folder (read-only, not part of this repo). This repo was created as a subfolder of it.
 
 ## Status
 - [x] Phase A audit (`AUDIT.md`); owner answered with "use defaults", HF token via `.env`, work in a venv.

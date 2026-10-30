@@ -1,6 +1,6 @@
 # Legacy code audit
 
-Scope: `F:\Projects\identification_of_cuss_words` (`LEGACY_DIR`), read-only. The new repo lives in the subfolder `cuss-word-pipeline/`, which is excluded from this audit.
+Scope: the author's original project folder (`LEGACY_DIR`), read-only. The new repo was created in a subfolder, `cuss-word-pipeline/`, which is excluded from this audit.
 Sources read: all `.py`/`.txt` files in full, the published paper PDF in full, the BlackBook report (keyword scan only), and the sample-output PDF header. Profane terms are masked in this document.
 
 > **SECURITY: a Hugging Face access token (`hf_…`, 37 chars) is hard-coded in `Code/final.py` (line 31) and also sits alone in `Code/tempCodeRunnerFile.py`. Revoke it at https://huggingface.co/settings/tokens. The value is not reproduced anywhere in this repo.**
@@ -59,7 +59,7 @@ Language: forced `en`. No Hindi/Hinglish handling anywhere.
 - Python 3.9.13 (`venv/pyvenv.cfg`; paper/report say "Python 3.9+").
 - Installed in the venv: `openai-whisper 20240930`, `torch 2.7.0`, `numpy 2.0.2`. **Nothing else of the stack** (pyannote, nltk, streamlit, pydub). So I cannot recover the pyannote/nltk versions; they are unpinned in `requirements.txt`.
 - Imports used: `whisper`, `pyannote.audio.Pipeline`, `pydub`, `nltk` (WordNet), `torch`, `streamlit`, `matplotlib` (+ unused `seaborn`, `subprocess`), `ffmpeg-python` (v1 only).
-- Hardware assumption: CUDA GPU, hard-coded `torch.device("cuda")`, TF32 flags. This machine has a GTX 1650 Ti (4 GB) and ffmpeg builds at `C:\ffmpeg\…` and `F:\Apps\ffmpeg-…`. The report lists "CUDA-enabled PyTorch" and 100 GB storage.
+- Hardware assumption: CUDA GPU, hard-coded `torch.device("cuda")`, TF32 flags. The development machine has a GTX 1650 Ti (4 GB); the installed torch there was CPU-only. The report lists "CUDA-enabled PyTorch" and 100 GB storage.
 - Hard-coded paths: relative `shortmovie1.mp4`, `sample-video.mp4`, `sample-audio.wav`, and `temp_audio.wav` in the cwd (collides when two runs share a folder). No absolute personal paths found in code.
 - Network at runtime: `nltk.download('wordnet')` at every import, and model downloads on first use (pyannote is gated and needs an HF login).
 
@@ -101,7 +101,7 @@ Language: forced `en`. No Hindi/Hinglish handling anywhere.
 6. **Fidelity check clip**: which CC0/CC-BY clip with 2+ speakers can I use for `compare_with_legacy.py`? [A LibriVox / AMI excerpt, or a TTS-generated dialogue]
 7. **Screenshots / `sampleaudio3.wav`**: are these publishable? [No; drop and re-capture later with masked terms]
 8. **Hinglish/Hindi**: the code has none, though the paper's future work mentions multilingual. [Do not claim it; add only a documented hook in D.5]
-9. **GPU**: this machine has a GTX 1650 Ti (4 GB). Is running the real models for the fidelity check and eval here OK? [Yes; Whisper `small` + pyannote fit, but slowly]
+9. **GPU**: the development machine has a GTX 1650 Ti (4 GB). Is running the real models for the fidelity check and eval here OK? [Yes; Whisper `small` + pyannote fit, but slowly]
 10. **GUI**: keep a Streamlit GUI (`app.py`) in the new repo as an optional extra? [No for v0.1.0, maybe later]
 11. **Licence and authorship**: MIT, author "Rusheil Singh Baath" (co-authors in CITATION.cff as the paper lists). Is this right? [Yes]
 12. **Nesting**: the repo stays inside the legacy folder as you asked. A later move or clone to a standalone location is trivial; fine? [Yes]
