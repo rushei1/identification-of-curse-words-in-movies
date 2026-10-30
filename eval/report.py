@@ -49,7 +49,8 @@ def pooled(res: dict) -> dict:
 
 
 def render(results_dir: Path = ROOT / "results") -> str:
-    res = {p.stem: json.loads(p.read_text()) for p in sorted(results_dir.glob("*.json"))}
+    allj = {p.stem: json.loads(p.read_text()) for p in sorted(results_dir.glob("*.json"))}
+    res = {k: v for k, v in allj.items() if "presets" in v}  # token-level dataset results
     L = ["# Evaluation results", "",
          "Unit: **token** (whitespace-split ASR output); *profane* is the positive class. Accuracy is "
          "dominated by true negatives (most words are not profane), so read precision, recall and F1 "
@@ -89,6 +90,16 @@ def render(results_dir: Path = ROOT / "results") -> str:
           "- Gold labels cover **detection on the ASR output**. Words Whisper mis-hears or drops are "
           "invisible to this metric; the synthetic set reports how many scripted words ASR recognised.",
           "- Token-level counts differ from the paper's hit counting only for multi-word phrases.", ""]
+    if "diarization_synthetic" in allj:
+        L += ["## Diarizer comparison on the synthetic clip (truth known)", "",
+              "| Diarizer | Speakers found / true | Turns | Purity | Gender: paper rule | Gender: pitch per turn |",
+              "|---|---|---|---|---|---|"]  # fmt: skip
+        for name, v in allj["diarization_synthetic"].items():
+            g = v["gender"]
+            L.append(f"| {name} | {v['speakers_found']} / {v['speakers_true']} | {v['turns']} | "
+                     f"{pct(v['purity'])} | {pct(g['paper_rule']['time_weighted_accuracy'])} | "
+                     f"{pct(g['pitch_per_turn']['time_weighted_accuracy'])} |")  # fmt: skip
+        L.append("")
     nr = [f"- **{k}**: {d}: not run (no results file)" for k, d in EXPECTED.items() if k not in res]
     L += ["## Not run", ""] + (nr or ["Nothing skipped."]) + [""]
     # brief rule: no lexicon term appears unmasked in any doc (also masks words quoted in the notes)

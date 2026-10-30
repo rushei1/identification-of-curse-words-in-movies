@@ -188,3 +188,12 @@ def test_load_dotenv_does_not_override_existing(tmp_path, monkeypatch):
 
     assert os.environ["HF_TOKEN"] == "abc" and os.environ["OTHER"] == "x y" and os.environ["KEEP"] == "old"
     load_dotenv(tmp_path / "missing.env")  # no file: no error
+
+
+def test_report_ignores_non_dataset_json_and_renders_diarization(tmp_path):
+    d = {"A": {"speakers_found": 2, "speakers_true": 2, "turns": 25, "purity": 1.0,
+               "gender": {"paper_rule": {"time_weighted_accuracy": 0.0},
+                          "pitch_per_turn": {"time_weighted_accuracy": 1.0}}}}  # fmt: skip
+    (tmp_path / "diarization_synthetic.json").write_text(json.dumps(d))
+    md = render(tmp_path)
+    assert "Diarizer comparison" in md and "| A | 2 / 2 | 25 | 100.0% | 0.0% | 100.0% |" in md
