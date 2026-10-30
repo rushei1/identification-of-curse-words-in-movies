@@ -50,6 +50,19 @@ def write_markdown(r: Report, det: Detector, path: Path) -> None:
         terms = Counter(det.mask(h.term) for h in r.hits if h.group == g)
         t = ", ".join(f"{k} x{v}" for k, v in terms.items()) or "-"
         L.append(f"| {g} | {n} | {r.unique_counts.get(g, 0)} | {t} |")
+    L += ["", "## Per diarization speaker", "",
+          "| Speaker | Turns | Hits | Gender per turn |", "|---|---|---|---|"]  # fmt: skip
+    for spk in sorted({x.speaker for x in r.segments}):
+        segs = [x for x in r.segments if x.speaker == spk]
+        mix = ", ".join(f"{g} {n}" for g, n in Counter(x.group for x in segs).items())
+        L.append(f"| {spk} | {len(segs)} | {sum(h.speaker == spk for h in r.hits)} | {mix} |")
+    L += ["", "## Turn audit (check these against the video)", "",
+          "| # | Time | Speaker | Group | F0 (Hz) | Hits |", "|---|---|---|---|---|---|"]  # fmt: skip
+    for i, x in enumerate(r.segments):
+        n = sum(h.start == x.start and h.speaker == x.speaker for h in r.hits)
+        f0 = "-" if x.f0 is None else f"{x.f0:.0f}"
+        L.append(f"| {i} | {srt_time(x.start)[:-4]}-{srt_time(x.end)[:-4]} | {x.speaker} | "
+                 f"{x.group} | {f0} | {n} |")  # fmt: skip
     L += ["", "## Timeline", ""]
     if not r.hits:
         L.append("No profanity detected.")
