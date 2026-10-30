@@ -18,3 +18,4 @@ local_samples/
 eval/data/
 eval/results/*.json
 output/
+output*/

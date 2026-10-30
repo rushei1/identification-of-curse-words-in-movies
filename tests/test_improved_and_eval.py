@@ -95,3 +95,71 @@ def test_report_masks_lexicon_words_in_notes(tmp_path):
     (tmp_path / "x.json").write_text(json.dumps(r))
     md = render(tmp_path)
     assert "shit" not in md and "dumb" not in md and "sucks" not in md and "s***" in md
+
+
+def test_pitch_gender_per_turn_and_lumped_speakers(tmp_path, monkeypatch):
+    """Same diarization label, different voices -> per-turn gender (paper rule cannot do this)."""
+    import wave
+
+    import numpy as np
+
+    from profanity_diarization.config import Settings
+    from profanity_diarization.schemas import Turn
+    from profanity_diarization.gender import classify, median_f0
+    from profanity_diarization.pipeline import Pipeline
+
+    sr = 16000
+
+    def tone(f, s=1.0):
+        t = np.arange(int(sr * s)) / sr
+        return sum(np.sin(2 * np.pi * f * k * t) / k for k in (1, 2, 3)) * 0.2
+
+    assert classify(*median_f0(tone(110), sr)) == "MALE"
+    assert classify(*median_f0(tone(220), sr)) == "FEMALE"
+    assert classify(*median_f0(np.zeros(sr), sr)) == "UNKNOWN"
+
+    audio = np.concatenate([tone(110), tone(220), tone(110)])
+    wav = tmp_path / "in.wav"
+    with wave.open(str(wav), "wb") as w:
+        w.setnchannels(1), w.setsampwidth(2), w.setframerate(sr)
+        w.writeframes((audio * 32767).astype("<i2").tobytes())
+    monkeypatch.setattr("profanity_diarization.pipeline.extract_audio", lambda s, d: d.write_bytes(wav.read_bytes()) or d)
+
+    class FakeTranscriber:
+        def __init__(self, texts):
+            self.texts = list(texts)
+
+        def transcribe_file(self, w):
+            return self.texts.pop(0)
+
+    class OneSpeaker:  # a diarizer that lumps everyone into one label
+        def diarize(self, w):
+            return [Turn(speaker="SPEAKER_00", start=i, end=i + 1) for i in range(3)]
+
+    pipe = Pipeline(Settings(speaker_labels="pitch_gender", lemmatize=False),
+                    FakeTranscriber(["a", "oh shit", "b"]), OneSpeaker(), Detector(LEX))  # fmt: skip
+    r = pipe.process(wav, tmp_path / "o")
+    assert [s.group for s in r.segments] == ["MALE", "FEMALE", "MALE"]
+    assert r.counts["FEMALE"] == 1 and r.counts["MALE"] == 0
+    md = pipe.write_outputs(r, tmp_path / "o", "in")[3].read_text()
+    assert "## Turn audit" in md and "SPEAKER_00 | 3 |" in md
+
+
+def test_smooth_by_speaker_and_gender_score(tmp_path):
+    from eval.gender_eval import score
+    from profanity_diarization.gender import smooth_by_speaker
+
+    g = ["MALE"] * 9 + ["FEMALE"] + ["FEMALE", "MALE", "FEMALE", "MALE"]
+    s = ["A"] * 10 + ["B"] * 4
+    out = smooth_by_speaker(g, s)
+    assert out[:10] == ["MALE"] * 10  # 90% agree -> smoothed
+    assert out[10:] == g[10:]  # 50/50 speaker is left per-turn
+    assert smooth_by_speaker(["UNKNOWN", "MALE"], ["A", "A"]) == ["MALE", "MALE"]
+
+    f = tmp_path / "t.csv"
+    f.write_text("clip,turn,paper_rule,pitch_per_turn,pitch_smoothed,true_gender\n"
+                 "x,0,F,M,M,M\nx,1,F,?,M,M\nx,2,M,F,F,\nx,3,M,M,M,F\n", encoding="utf-8")  # fmt: skip
+    r = score(f)["methods"]
+    assert r["paper_rule"]["correct"] == 0 and r["paper_rule"]["decided"] == 3
+    assert r["pitch_per_turn"]["abstained"] == 1 and r["pitch_per_turn"]["correct"] == 1
+    assert r["pitch_smoothed"]["correct"] == 2
