@@ -23,7 +23,8 @@ actually run, including where the original method falls short.
 | | |
 |---|---|
 | Pipeline (audio -> diarize -> transcribe -> detect -> report) | Working, run end-to-end on 3 inputs (CPU, Windows) |
-| Tests | 29 pass in ~1.5 s, no network / GPU / model downloads needed |
+| Tests | 30 pass in ~1.5 s, no network / GPU / model downloads needed (also pass with torch/whisper/pyannote blocked, as in CI) |
+| CI (GitHub Actions) / Docker | Added; CI has not run on GitHub yet, and the Docker image was not built here (compose file validated) |
 | Matches the legacy script's output exactly | **Not verified**: the fidelity script is not written yet |
 | Paper's reported 94.8% accuracy / 93.4% F1 | **Not reproducible** from the original files (no evaluation code or labels exist) |
 | Gender labels of the paper rule | **Unreliable**: they come from a speaker-label rule, not from voices (see below) |
@@ -84,6 +85,16 @@ masked), `.md` (summary, masked). `python -m profanity_diarization.cli ...` work
 > The first model run is slow on CPU. Measured here (CPU only, Whisper `small`, original diarizer): about
 > 7 minutes for a 2-minute clip. Use `--device cuda` if you have a CUDA build of torch.
 
+### Docker (CPU)
+
+```bash
+mkdir input && cp your_clip.mp4 input/        # HF_TOKEN must be in .env
+docker compose run --rm profanity-diarization prefetch-models   # once, needs network
+docker compose up                                               # reports in ./output
+```
+The `Dockerfile` and compose file are provided and the compose file validates, but the image was **not built or run**
+in the development environment; treat it as a starting point. The token is passed at runtime and never baked in.
+
 ## Presets
 
 | Preset | Diarizer | Matching | Speaker labels | Purpose |
@@ -126,6 +137,8 @@ Produced by the `improved` preset on a synthetic text-to-speech clip written for
 - 00:00:13,261-00:00:15,269 SPEAKER_01 (MALE): `f***` in "Get the f*** out of my office right now."
 ```
 
+![Masked Markdown report excerpt](docs/img/report_example.png)
+
 The Markdown report also contains a per-speaker table and a **turn audit table** (time, speaker, group,
 pitch, hit count; no dialogue text) so you can check every turn against the video.
 
@@ -143,7 +156,8 @@ Reproduce with the commands in [Reproducing the results](#reproducing-the-result
 | Real clip 2 | A magazine video of a father and daughter | 392 s | 32 profane tokens, labelled by the model |
 | Synthetic | 25 scripted sentences, 2 offline TTS voices (1 male, 1 female), includes decoys | 103 s | Exact, by construction |
 
-The real clips are copyrighted, so they are **not** in the repo. Their labelled transcripts are kept locally
+The real clips are copyrighted, so they are **not** in the repo (file names, sizes and SHA-256 hashes are in
+[`docs/DATA.md`](docs/DATA.md)). Their labelled transcripts are kept locally
 in the git-ignored `eval/data/`. Labels were assigned by the model that wrote this code, **not by
 independent human annotators**; borderline calls are noted in the label files. Please audit them.
 The synthetic set contains decoys on purpose: innocent words that contain a profane stem, mild lexicon
@@ -173,6 +187,8 @@ What the errors are:
 - **False positives (both presets)** are mild or literal uses of listed words (`d***`, `h***`, `s*** over`,
   `f*** accident`) and a surname/book title. Neither preset looks at context, so `improved` does not fix these.
 - `improved`'s stem matching also protects innocent words (a stoplist blocks e.g. a famous novelist's surname).
+
+![Detection: paper vs improved](docs/img/detection.png)
 
 **Caveat on the numbers.** `improved` was designed after looking at real clip 1's errors, so its clip 1
 score is in-sample. Real clip 2 and the synthetic set were not used to design it, but the same model
@@ -207,6 +223,8 @@ Both models run on the same inputs and the same Whisper `small`, differing only 
 \* "Present in the transcript" is counted against the profane words of the hand-labelled **original** run, so the
 original column is 100% by construction. It measures what 3.1 *loses relative to the original*, not what
 Whisper missed in absolute terms. "End-to-end recall" divides detected words by those same gold counts.
+
+![End-to-end recall by diarizer](docs/img/diarizers.png)
 
 How to read the gap:
 
@@ -335,19 +353,27 @@ Real-clip label files go in `eval/data/<name>.labels.json` (format in `eval/eval
 ```
 src/profanity_diarization/   audio, asr, diarize, speakers, gender, profanity, report, pipeline, cli, config, presets/, lexicon/
 eval/                        metrics, evaluate, diar_eval, gender_eval, synthetic, report, results.md (masked)
-tests/                       model-free tests with fake transcriber / diarizer (29)
+tests/                       model-free tests with fake transcriber / diarizer (30)
 docs/PROGRESS.md             decisions, discrepancies, measured numbers, caveats
+docs/DATA.md                 data used (video hashes, synthetic set, labels, licences)
+docs/TODO_USER.md            owner checklist before/after publishing
+docs/img/                    figures (regenerate with `make figures`)
+scripts/make_figures.py      builds the charts from eval/results
+.github/workflows/ci.yml     lint + tests on Python 3.9-3.12 (no models installed)
+Dockerfile, docker-compose.yml   CPU image (build not tested here)
 AUDIT.md                     audit of the original scattered code
 data/lexicon/README.md       lexicon provenance
 ```
 
-Development: `pip install -e ".[dev]"`, then `pytest` (no models needed). Style: `ruff`.
+Development: `pip install -e ".[dev]"`, then `pytest` (no models needed). Style: `ruff` (`make lint`). See
+[`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Not done yet
 
-Fidelity check against the original script, Docker image, CI, word-error-rate and diarization-error-rate
-evaluation on public datasets, overlapping-speech handling, a censoring (beep/mute) command, and
-word-level timestamps. They are tracked in [`docs/PROGRESS.md`](docs/PROGRESS.md).
+Fidelity check against the original script, word-error-rate and diarization-error-rate evaluation on public
+datasets, overlapping-speech handling, a censoring (beep/mute) command, and word-level timestamps. A first CI run
+on GitHub and a Docker image build are also still to be confirmed. They are tracked in
+[`docs/PROGRESS.md`](docs/PROGRESS.md); owner tasks are in [`docs/TODO_USER.md`](docs/TODO_USER.md).
 
 ## Citation
 
