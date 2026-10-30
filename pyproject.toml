@@ -39,6 +39,7 @@ profanity_diarization = ["presets/*.yaml", "lexicon/*.txt"]
 addopts = "-m 'not slow and not models'"
 markers = ["slow: slow tests", "models: needs real models/network"]
 testpaths = ["tests"]
+pythonpath = ["."]  # tests import the top-level eval/ package
 
 [tool.ruff]
 line-length = 100
