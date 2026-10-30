@@ -14,7 +14,7 @@ Tick these before or right after the first push.
 ## Create the repository (GitHub)
 ```bash
 # in this folder (it has its own git repo, branch main)
-gh repo create profanity-diarization-pipeline --public --source . --remote origin
+git remote add origin https://github.com/rushei1/identification-of-curse-words-in-movies.git
 git push -u origin main
 ```
 Suggested description: *Offline profanity detection and speaker diarization for movie clips with Whisper and
@@ -24,7 +24,6 @@ Suggested topics: `whisper`, `pyannote`, `speaker-diarization`, `speech-to-text`
 
 After the first push:
 - [ ] Open the **Actions** tab and check the CI run. It has not run on GitHub yet.
-- [ ] Replace `<repo-url>` in the README quickstart with the real clone URL.
 - [ ] (Optional) add the repo link to your profile README, CV, LinkedIn and the paper's author profile.
 
 ## Things that make the results stronger (not required to publish)

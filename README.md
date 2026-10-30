@@ -11,7 +11,8 @@ This is a clean, tested reimplementation of the system described in:
 > *An Offline Modular System for Profanity Detection and Speaker Diarization in Movies and Video Clips
 > Using Whisper and PyAnnote*, IJFMR 7(3), May-June 2025. <https://doi.org/g9kfph>
 
-The `paper` preset reproduces the published behaviour. Everything that goes beyond it is **opt-in** and
+The `paper` preset reproduces the published behaviour. The original scripts from the paper are kept unchanged in
+[`legacy/`](legacy/). Everything that goes beyond it is **opt-in** and
 lives in separate presets, so the original method stays measurable. This README reports what was
 actually run, including where the original method falls short.
 
@@ -55,7 +56,8 @@ timestamps**: a hit carries the start/end of the turn it occurred in.
 Requirements: Python 3.9+, [ffmpeg](https://ffmpeg.org) on `PATH`, ~4 GB free RAM, a Hugging Face account.
 
 ```bash
-git clone <repo-url> && cd profanity-diarization
+git clone https://github.com/rushei1/identification-of-curse-words-in-movies.git
+cd identification-of-curse-words-in-movies
 python -m venv .venv
 .venv/Scripts/activate            # Windows;  source .venv/bin/activate on Linux/macOS
 pip install -e ".[models,dev]"    # torch, openai-whisper, pyannote.audio, nltk, ...
@@ -354,6 +356,7 @@ Real-clip label files go in `eval/data/<name>.labels.json` (format in `eval/eval
 src/profanity_diarization/   audio, asr, diarize, speakers, gender, profanity, report, pipeline, cli, config, presets/, lexicon/
 eval/                        metrics, evaluate, diar_eval, gender_eval, synthetic, report, results.md (masked)
 tests/                       model-free tests with fake transcriber / diarizer (30)
+legacy/                      the original paper scripts (app.py, final_gpu.py), unchanged
 docs/PROGRESS.md             decisions, discrepancies, measured numbers, caveats
 docs/DATA.md                 data used (video hashes, synthetic set, labels, licences)
 docs/TODO_USER.md            owner checklist before/after publishing
