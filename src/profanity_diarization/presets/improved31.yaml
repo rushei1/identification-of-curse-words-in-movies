@@ -1,0 +1,11 @@
+# improved + pyannote 3.1 diarizer (needs accepted terms for speaker-diarization-3.1 and segmentation-3.0)
+# Opt-in improvements over `paper` (paper output is unchanged). Same models/lexicon as paper;
+# only the matching differs: stem matching for compounds/plurals (with an innocent-word
+# stoplist) and whole-phrase matching (fixes the "son of a b****" entry that can never match).
+whisper_model: small
+language: en
+diarization_model: pyannote/speaker-diarization-3.1
+lemmatize: true
+speaker_labels: pitch_gender   # per-turn voice pitch instead of the SPEAKER_01 label rule
+lexicon: null
+match: improved
