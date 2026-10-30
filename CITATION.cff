@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the paper it implements."
+title: "profanity-diarization"
+type: software
+license: MIT
+authors:
+  - family-names: Baath
+    given-names: Rusheil Singh
+preferred-citation:
+  type: article
+  title: "An Offline Modular System for Profanity Detection and Speaker Diarization in Movies and Video Clips Using Whisper and PyAnnote"
+  authors:
+    - family-names: Baath
+      given-names: Rusheil Singh
+    - family-names: Meesala
+      given-names: Kushal Rao
+    - family-names: Garad
+      given-names: Jatin Umakant
+    - family-names: Sahane
+      given-names: Samruddhi
+    - family-names: Bobde
+      given-names: Sarika
+    - family-names: Tiwari
+      given-names: Umang
+  journal: "International Journal for Multidisciplinary Research (IJFMR)"
+  volume: 7
+  issue: 3
+  year: 2025
+  url: "https://doi.org/g9kfph"
