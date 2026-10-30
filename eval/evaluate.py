@@ -39,10 +39,20 @@ def evaluate(labels_path: Path, presets=PRESETS) -> dict:
     spec = json.loads(labels_path.read_text(encoding="utf-8"))
     rep_path = (labels_path.parent / spec["report"]).resolve()
     report = Report.model_validate_json(rep_path.read_text(encoding="utf-8"))
-    gold_set = set(spec["positives"])
     toks = list(tokens(report))
-    gold = [f"{s}:{t}" in gold_set for s, t, _ in toks]
-    assert sum(gold) == len(gold_set), "labels refer to tokens that do not exist"
+    if "forms_from" in spec:  # other diarizer/ASR segmentation: label by the gold word FORMS of a labeled run
+        from profanity_diarization.profanity import normalize
+
+        base = json.loads((labels_path.parent / spec["forms_from"]).read_text(encoding="utf-8"))
+        brep = Report.model_validate_json((labels_path.parent / base["report"]).read_text(encoding="utf-8"))
+        bt = {f"{a}:{b}": t for a, b, t in tokens(brep)}
+        forms = {normalize(bt[k]) for k in base["positives"]}
+        gold = [normalize(t) in forms for _, _, t in toks]
+        gold_set = {k for k, g in zip((f"{a}:{b}" for a, b, _ in toks), gold) if g}
+    else:
+        gold_set = set(spec["positives"])
+        gold = [f"{s}:{t}" in gold_set for s, t, _ in toks]
+        assert sum(gold) == len(gold_set), "labels refer to tokens that do not exist"
     out = {"dataset": labels_path.name.replace(".labels.json", ""), "n_tokens": len(toks),
            "n_gold_positive": sum(gold), "labeler": spec.get("labeler", "unknown"),
            "notes": spec.get("notes", ""), "timings_s": report.timings, "presets": {}}  # fmt: skip
