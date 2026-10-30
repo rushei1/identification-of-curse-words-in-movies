@@ -1,0 +1,9 @@
+streamlit
+openai-whisper
+pyannote.audio
+torch
+pydub
+nltk
+matplotlib
+seaborn
+ffmpeg-python
