@@ -1,0 +1,16 @@
+# Put videos in ./input, run `docker compose run --rm profanity-diarization prefetch-models` once
+# (needs network + HF_TOKEN in .env), then `docker compose up`. Reports land in ./output.
+services:
+  profanity-diarization:
+    build: .
+    image: profanity-diarization
+    environment:
+      HF_TOKEN: ${HF_TOKEN:?set HF_TOKEN in your .env (never commit it)}
+    volumes:
+      - ./input:/data/input:ro
+      - ./output:/data/output
+      - models:/models
+    command: ["batch", "/data/input", "--output-dir", "/data/output", "--device", "cpu"]
+
+volumes:
+  models:
