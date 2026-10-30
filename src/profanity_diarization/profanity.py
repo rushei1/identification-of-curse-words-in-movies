@@ -79,8 +79,15 @@ class Detector:
                 if term:
                     n = len(ph) if ph else 1
                     hits.append(
-                        ProfanityHit(term=term, token=" ".join(toks[i : i + n]), speaker=s.speaker,
-                                     group=s.group, start=s.start, end=s.end, context=s.text)  # fmt: skip
+                        ProfanityHit(
+                            term=term,
+                            token=" ".join(toks[i : i + n]),
+                            speaker=s.speaker,
+                            group=s.group,
+                            start=s.start,
+                            end=s.end,
+                            context=s.text,
+                        )  # fmt: skip
                     )
                     i += n
                 else:
@@ -97,7 +104,7 @@ class Detector:
         return re.sub(r"\S+", sub, text)
 
 
-def build_detector(cfg) -> "Detector":
+def build_detector(cfg) -> Detector:
     """Detector for a Settings object (``match`` = exact | improved)."""
     lemma = verb_lemmatizer() if cfg.lemmatize else (lambda w: w)
     lex = load_lexicon(cfg.lexicon)

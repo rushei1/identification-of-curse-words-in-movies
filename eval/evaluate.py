@@ -40,11 +40,15 @@ def evaluate(labels_path: Path, presets=PRESETS) -> dict:
     rep_path = (labels_path.parent / spec["report"]).resolve()
     report = Report.model_validate_json(rep_path.read_text(encoding="utf-8"))
     toks = list(tokens(report))
-    if "forms_from" in spec:  # other diarizer/ASR segmentation: label by the gold word FORMS of a labeled run
+    if (
+        "forms_from" in spec
+    ):  # other diarizer/ASR segmentation: label by the gold word FORMS of a labeled run
         from profanity_diarization.profanity import normalize
 
         base = json.loads((labels_path.parent / spec["forms_from"]).read_text(encoding="utf-8"))
-        brep = Report.model_validate_json((labels_path.parent / base["report"]).read_text(encoding="utf-8"))
+        brep = Report.model_validate_json(
+            (labels_path.parent / base["report"]).read_text(encoding="utf-8")
+        )
         bt = {f"{a}:{b}": t for a, b, t in tokens(brep)}
         forms = {normalize(bt[k]) for k in base["positives"]}
         gold = [normalize(t) in forms for _, _, t in toks]
@@ -60,8 +64,12 @@ def evaluate(labels_path: Path, presets=PRESETS) -> dict:
         det = build_detector(load_settings(p))
         pred = [det.match(t) is not None for _, _, t in toks]
         res = scores(confusion(gold, pred))
-        res["false_positives"] = [mask(t) for (_, _, t), g, q in zip(toks, gold, pred) if q and not g]
-        res["false_negatives"] = [mask(t) for (_, _, t), g, q in zip(toks, gold, pred) if g and not q]
+        res["false_positives"] = [
+            mask(t) for (_, _, t), g, q in zip(toks, gold, pred) if q and not g
+        ]
+        res["false_negatives"] = [
+            mask(t) for (_, _, t), g, q in zip(toks, gold, pred) if g and not q
+        ]
         out["presets"][p] = res
     return out
 
@@ -77,7 +85,10 @@ def main(argv=None):
         r = evaluate(f) | {"meta": meta}
         (ROOT / "results").mkdir(exist_ok=True)
         (ROOT / "results" / f"{r['dataset']}.json").write_text(json.dumps(r, indent=2))
-        print(r["dataset"], {p: (v["precision"], v["recall"], v["f1"]) for p, v in r["presets"].items()})
+        print(
+            r["dataset"],
+            {p: (v["precision"], v["recall"], v["f1"]) for p, v in r["presets"].items()},
+        )
 
 
 if __name__ == "__main__":

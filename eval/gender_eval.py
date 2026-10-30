@@ -17,7 +17,10 @@ from profanity_diarization.gender import smooth_by_speaker
 from profanity_diarization.profanity import build_detector
 
 ROOT = Path(__file__).parent
-CLIPS = {"netflix": "*Netflix", "newyorker": "*New Yorker"}  # name -> report stem glob (user file names)
+CLIPS = {
+    "netflix": "*Netflix",
+    "newyorker": "*New Yorker",
+}  # name -> report stem glob (user file names)
 METHODS = ("paper_rule", "pitch_per_turn", "pitch_smoothed")
 SHORT = {"MALE": "M", "FEMALE": "F", "UNKNOWN": "?"}
 
@@ -54,7 +57,11 @@ def template():
 
 
 def score(path: Path = ROOT / "data" / "gender_template.csv") -> dict:
-    labeled = [r for r in csv.DictReader(open(path, encoding="utf-8")) if r["true_gender"].strip().upper() in ("M", "F")]
+    labeled = [
+        r
+        for r in csv.DictReader(open(path, encoding="utf-8"))
+        if r["true_gender"].strip().upper() in ("M", "F")
+    ]
     res = {"n_labeled": len(labeled), "methods": {}}
     for m in METHODS:
         decided = [r for r in labeled if r[m] in ("M", "F")]

@@ -69,7 +69,7 @@ def write_markdown(r: Report, det: Detector, path: Path) -> None:
     for h in r.hits:
         L.append(
             f"- {srt_time(h.start)}-{srt_time(h.end)} **{h.speaker}** ({h.group}): "
-            f"`{det.mask(h.term)}` in \"{det.mask(h.context)}\""
+            f'`{det.mask(h.term)}` in "{det.mask(h.context)}"'
         )
     L += ["", "_Timestamps are turn-level (the paper pipeline keeps no word timestamps)._", ""]
     Path(path).write_text("\n".join(L), encoding="utf-8")

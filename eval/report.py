@@ -57,7 +57,10 @@ def render(results_dir: Path = ROOT / "results") -> str:
          "first. All profane terms are masked.", ""]  # fmt: skip
     if res:
         m = next(iter(res.values())).get("meta", {})
-        L += [f"Run: {m.get('date', '?')} | Python {m.get('python', '?')} | {m.get('platform', '?')}", ""]
+        L += [
+            f"Run: {m.get('date', '?')} | Python {m.get('python', '?')} | {m.get('platform', '?')}",
+            "",
+        ]
     real = [n for n in REAL if n in res]
     if len(real) > 1:
         pl = pooled(res)
@@ -79,17 +82,23 @@ def render(results_dir: Path = ROOT / "results") -> str:
             L += ["Stage time: not recorded (report rebuilt from the stage cache).", ""]
         for p, v in r["presets"].items():
             fp, fn = Counter(v["false_positives"]), Counter(v["false_negatives"])
-            L.append(f"- **{p}** false positives: {dict(fp) or 'none'}; false negatives: {dict(fn) or 'none'}")
+            L.append(
+                f"- **{p}** false positives: {dict(fp) or 'none'}; false negatives: {dict(fn) or 'none'}"
+            )
         L.append("")
-    L += ["## Reading the errors", "",
-          "- **False negatives** are words outside the 20-term lexicon or in a form it cannot match "
-          "(compounds, agent nouns such as the *-er* form of a verb). Exact-match `paper` cannot catch them.",
-          "- **False positives** are lexicon words used in a mild or literal sense (`screwed`, `freak`, "
-          "`dumb`, `heck`) and names (a surname or a book title). Neither preset uses context, so "
-          "`improved` does not reduce them.",
-          "- Gold labels cover **detection on the ASR output**. Words Whisper mis-hears or drops are "
-          "invisible to this metric; the synthetic set reports how many scripted words ASR recognised.",
-          "- Token-level counts differ from the paper's hit counting only for multi-word phrases.", ""]
+    L += [
+        "## Reading the errors",
+        "",
+        "- **False negatives** are words outside the 20-term lexicon or in a form it cannot match "
+        "(compounds, agent nouns such as the *-er* form of a verb). Exact-match `paper` cannot catch them.",
+        "- **False positives** are lexicon words used in a mild or literal sense (`screwed`, `freak`, "
+        "`dumb`, `heck`) and names (a surname or a book title). Neither preset uses context, so "
+        "`improved` does not reduce them.",
+        "- Gold labels cover **detection on the ASR output**. Words Whisper mis-hears or drops are "
+        "invisible to this metric; the synthetic set reports how many scripted words ASR recognised.",
+        "- Token-level counts differ from the paper's hit counting only for multi-word phrases.",
+        "",
+    ]
     if "diarization_synthetic" in allj:
         L += ["## Diarizer comparison on the synthetic clip (truth known)", "",
               "| Diarizer | Speakers found / true | Turns | Purity | Gender: paper rule | Gender: pitch per turn |",

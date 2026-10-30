@@ -29,7 +29,10 @@ SENTENCES = [
     (D, "That was a *damn good game last night."),
     (D, "I screwed the lid on the jar and put the nuts in the cupboard."),  # literal use, negative
     (D, "It was a freak accident on the highway."),  # literal use, negative
-    (D, "The engineers visited Scunthorpe and met Charles Dickens fans."),  # stem inside innocent word
+    (
+        D,
+        "The engineers visited Scunthorpe and met Charles Dickens fans.",
+    ),  # stem inside innocent word
     (D, "My assistant will pass the message to the class."),
     (D, "The vacuum sucks up the dust very quickly."),  # literal use, negative
     (D, "Those *motherfuckers stole my wallet."),

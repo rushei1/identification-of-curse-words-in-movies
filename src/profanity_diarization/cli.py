@@ -59,7 +59,7 @@ def process(
         _run(Pipeline(cfg), file, output_dir)
     except (AudioError, RuntimeError, FileNotFoundError) as e:
         typer.echo(f"error: {e}", err=True)
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 @app.command()
@@ -102,7 +102,7 @@ def prefetch(preset: str = "paper"):
         PyannoteDiarizer(cfg.diarization_model, "cpu")._load()
     except RuntimeError as e:
         typer.echo(f"error: {e}", err=True)
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
     typer.echo(f"whisper cache: {os.path.expanduser('~/.cache/whisper')}")
     typer.echo(f"HF cache: {os.environ.get('HF_HOME', os.path.expanduser('~/.cache/huggingface'))}")
 

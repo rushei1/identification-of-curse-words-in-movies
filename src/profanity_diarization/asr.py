@@ -48,7 +48,9 @@ def transcribe_turns(
     return out
 
 
-def to_segments(rows: list[tuple[Turn, str]], groups: list, f0s: Optional[list] = None) -> list[Segment]:
+def to_segments(
+    rows: list[tuple[Turn, str]], groups: list, f0s: Optional[list] = None
+) -> list[Segment]:
     """Keep only non-empty text (legacy ``if text:``). ``groups[i]`` belongs to ``rows[i]``."""
     f0s = f0s or [None] * len(rows)
     return [

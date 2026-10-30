@@ -60,7 +60,7 @@ def evaluate(segments: list, groups_by_method: dict, truth: list) -> dict:
 
 def main():
     truth, out = truth_intervals(), {}
-    for name, (paper_p, pitch_p) in REPORTS.items():
+    for name, (_, pitch_p) in REPORTS.items():
         imp = json.loads((ROOT.parent / pitch_p).read_text(encoding="utf-8"))
         segs = imp["segments"]
         g = SpeakerGrouper()

@@ -1,9 +1,9 @@
 import json
 
 import pytest
-
 from eval.metrics import confusion, scores
 from eval.report import render
+
 from profanity_diarization.config import load_settings
 from profanity_diarization.profanity import Detector, load_lexicon
 from profanity_diarization.schemas import Segment
@@ -104,9 +104,9 @@ def test_pitch_gender_per_turn_and_lumped_speakers(tmp_path, monkeypatch):
     import numpy as np
 
     from profanity_diarization.config import Settings
-    from profanity_diarization.schemas import Turn
     from profanity_diarization.gender import classify, median_f0
     from profanity_diarization.pipeline import Pipeline
+    from profanity_diarization.schemas import Turn
 
     sr = 16000
 
@@ -123,7 +123,10 @@ def test_pitch_gender_per_turn_and_lumped_speakers(tmp_path, monkeypatch):
     with wave.open(str(wav), "wb") as w:
         w.setnchannels(1), w.setsampwidth(2), w.setframerate(sr)
         w.writeframes((audio * 32767).astype("<i2").tobytes())
-    monkeypatch.setattr("profanity_diarization.pipeline.extract_audio", lambda s, d: d.write_bytes(wav.read_bytes()) or d)
+    monkeypatch.setattr(
+        "profanity_diarization.pipeline.extract_audio",
+        lambda s, d: d.write_bytes(wav.read_bytes()) or d,
+    )
 
     class FakeTranscriber:
         def __init__(self, texts):
@@ -147,6 +150,7 @@ def test_pitch_gender_per_turn_and_lumped_speakers(tmp_path, monkeypatch):
 
 def test_smooth_by_speaker_and_gender_score(tmp_path):
     from eval.gender_eval import score
+
     from profanity_diarization.gender import smooth_by_speaker
 
     g = ["MALE"] * 9 + ["FEMALE"] + ["FEMALE", "MALE", "FEMALE", "MALE"]
@@ -169,7 +173,10 @@ def test_diar_eval_purity_and_gender():
     from eval.diar_eval import evaluate
 
     truth = [(0, 2, "MALE"), (3, 5, "FEMALE")]
-    segs = [{"speaker": "A", "start": 0, "end": 2}, {"speaker": "A", "start": 3, "end": 5}]  # lumped
+    segs = [
+        {"speaker": "A", "start": 0, "end": 2},
+        {"speaker": "A", "start": 3, "end": 5},
+    ]  # lumped
     r = evaluate(segs, {"m": ["MALE", "MALE"]}, truth)
     assert r["speakers_found"] == 1 and r["purity"] == 0.5
     assert r["gender"]["m"]["time_weighted_accuracy"] == 0.5
@@ -186,7 +193,11 @@ def test_load_dotenv_does_not_override_existing(tmp_path, monkeypatch):
     load_dotenv(f)
     import os
 
-    assert os.environ["HF_TOKEN"] == "abc" and os.environ["OTHER"] == "x y" and os.environ["KEEP"] == "old"
+    assert (
+        os.environ["HF_TOKEN"] == "abc"
+        and os.environ["OTHER"] == "x y"
+        and os.environ["KEEP"] == "old"
+    )
     load_dotenv(tmp_path / "missing.env")  # no file: no error
 
 
