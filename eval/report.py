@@ -29,6 +29,25 @@ def table(res: dict) -> list:
     return L
 
 
+REAL = ("sample-video", "newyorker")
+
+
+def pooled(res: dict) -> dict:
+    """Micro-average over the real clips: sum the confusion matrices, then rescore."""
+    from .metrics import scores
+
+    names = [n for n in REAL if n in res]
+    out = {"n_tokens": 0, "n_gold_positive": 0, "presets": {}}
+    for n in names:
+        out["n_tokens"] += res[n]["n_tokens"]
+        out["n_gold_positive"] += res[n]["n_gold_positive"]
+    for p in res[names[0]]["presets"]:
+        c = {k: sum(res[n]["presets"][p][k] for n in names) for k in ("tp", "fp", "fn", "tn")}
+        out["presets"][p] = scores(c)
+    out["names"] = names
+    return out
+
+
 def render(results_dir: Path = ROOT / "results") -> str:
     res = {p.stem: json.loads(p.read_text()) for p in sorted(results_dir.glob("*.json"))}
     L = ["# Evaluation results", "",
@@ -38,18 +57,46 @@ def render(results_dir: Path = ROOT / "results") -> str:
     if res:
         m = next(iter(res.values())).get("meta", {})
         L += [f"Run: {m.get('date', '?')} | Python {m.get('python', '?')} | {m.get('platform', '?')}", ""]
+    real = [n for n in REAL if n in res]
+    if len(real) > 1:
+        pl = pooled(res)
+        L += [f"## Headline: real clips pooled ({' + '.join(real)})", "",
+              f"{pl['n_tokens']} tokens, {pl['n_gold_positive']} gold-positive (micro-average: confusion "
+              "matrices summed, then rescored). Labels are model-assigned, not independent human "
+              "annotation; the `improved` matcher was designed from the first clip, so only the second "
+              "clip and the synthetic set are out-of-sample for it.", ""]  # fmt: skip
+        L += table(pl) + [""]
     for name, r in res.items():
         L += [f"## {name}", "",
               f"{r['n_tokens']} tokens, {r['n_gold_positive']} gold-positive. Labels by: {r['labeler']}. "
               f"{r['notes']}", ""]  # fmt: skip
         L += table(r) + [""]
+        t = r.get("timings_s") or {}
+        if t.get("diarize", 0) >= 1:
+            L += ["Stage time (CPU): " + ", ".join(f"{k} {v:.0f}s" for k, v in t.items()), ""]
+        else:
+            L += ["Stage time: not recorded (report rebuilt from the stage cache).", ""]
         for p, v in r["presets"].items():
             fp, fn = Counter(v["false_positives"]), Counter(v["false_negatives"])
             L.append(f"- **{p}** false positives: {dict(fp) or 'none'}; false negatives: {dict(fn) or 'none'}")
         L.append("")
+    L += ["## Reading the errors", "",
+          "- **False negatives** are words outside the 20-term lexicon or in a form it cannot match "
+          "(compounds, agent nouns such as the *-er* form of a verb). Exact-match `paper` cannot catch them.",
+          "- **False positives** are lexicon words used in a mild or literal sense (`screwed`, `freak`, "
+          "`dumb`, `heck`) and names (a surname or a book title). Neither preset uses context, so "
+          "`improved` does not reduce them.",
+          "- Gold labels cover **detection on the ASR output**. Words Whisper mis-hears or drops are "
+          "invisible to this metric; the synthetic set reports how many scripted words ASR recognised.",
+          "- Token-level counts differ from the paper's hit counting only for multi-word phrases.", ""]
     nr = [f"- **{k}**: {d}: not run (no results file)" for k, d in EXPECTED.items() if k not in res]
     L += ["## Not run", ""] + (nr or ["Nothing skipped."]) + [""]
-    return "\n".join(L)
+    # brief rule: no lexicon term appears unmasked in any doc (also masks words quoted in the notes)
+    from profanity_diarization.config import Settings
+    from profanity_diarization.profanity import build_detector
+
+    det = build_detector(Settings(lemmatize=False, match="improved"))  # no WordNet needed
+    return "\n".join(det.mask(line) for line in L)
 
 
 def main():

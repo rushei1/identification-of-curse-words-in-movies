@@ -91,11 +91,15 @@ def make_labels(report: Path, out: Path = DATA / "synthetic.labels.json") -> dic
                 seen.add(n)
     n_marked = sum(w.startswith("*") for _, t in SENTENCES for w in t.split())
     spec = {
-        "report": str(Path("..") / ".." / report) if not report.is_absolute() else str(report),
+        "report": f"../../{report.as_posix()}",  # relative to eval/data, report under the repo root
         "labeler": "by construction (scripted TTS text; known positives)",
         "notes": f"SYNTHETIC, not representative of real movies. {n_marked} scripted profane words; "
                  f"{len(pos)} recognised verbatim by ASR in the transcript, {len(forms - seen)} of "
-                 f"{len(forms)} distinct forms never appeared (ASR miss, not a detector miss).",
+                 f"{len(forms)} distinct forms never appeared (ASR miss, not a detector miss). Policy as for the "
+                 "real clips: mild adjectives/verbs ('dumb', 'sucks') and literal uses ('screwed', 'nuts', "
+                 "'freak') are negative; 'jerk' as an insult noun is positive. 'Moby Dick' (a name) is a "
+                 "known ambiguity for lexical matchers. 'Dickens' exercised the stoplist; TTS respelled "
+                 "Scunthorpe/Pissarro, so those two are covered only by unit tests.",
         "positives": pos,
     }  # fmt: skip
     out.write_text(json.dumps(spec, indent=2), encoding="utf-8")

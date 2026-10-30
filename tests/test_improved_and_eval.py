@@ -72,3 +72,26 @@ def test_report_not_run_and_masking(tmp_path):
     (tmp_path / "synthetic.json").write_text(json.dumps(r))
     md = render(tmp_path)
     assert "synthetic" in md and "n/a" in md and "**synthetic**: " not in md.split("## Not run")[1]
+
+
+def test_pooled_sums_confusions():
+    from eval.report import pooled
+
+    def r(tp, fp, fn, tn):
+        return {"n_tokens": tp + fp + fn + tn, "n_gold_positive": tp + fn,
+                "presets": {"paper": scores({"tp": tp, "fp": fp, "fn": fn, "tn": tn})}}  # fmt: skip
+
+    p = pooled({"sample-video": r(10, 0, 3, 261), "newyorker": r(28, 3, 4, 812)})
+    v = p["presets"]["paper"]
+    assert (v["tp"], v["fp"], v["fn"], v["tn"]) == (38, 3, 7, 1073)
+    assert v["precision"] == pytest.approx(38 / 41)
+
+
+def test_report_masks_lexicon_words_in_notes(tmp_path):
+    r = {"dataset": "x", "n_tokens": 1, "n_gold_positive": 0, "labeler": "t",
+         "notes": "mild words like dumb and sucks, plus shit", "meta": {},
+         "presets": {"paper": {**scores(confusion([0], [0])), "false_positives": [],
+                               "false_negatives": []}}}  # fmt: skip
+    (tmp_path / "x.json").write_text(json.dumps(r))
+    md = render(tmp_path)
+    assert "shit" not in md and "dumb" not in md and "sucks" not in md and "s***" in md

@@ -45,7 +45,7 @@ def evaluate(labels_path: Path, presets=PRESETS) -> dict:
     assert sum(gold) == len(gold_set), "labels refer to tokens that do not exist"
     out = {"dataset": labels_path.name.replace(".labels.json", ""), "n_tokens": len(toks),
            "n_gold_positive": sum(gold), "labeler": spec.get("labeler", "unknown"),
-           "notes": spec.get("notes", ""), "presets": {}}  # fmt: skip
+           "notes": spec.get("notes", ""), "timings_s": report.timings, "presets": {}}  # fmt: skip
     for p in presets:
         det = build_detector(load_settings(p))
         pred = [det.match(t) is not None for _, _, t in toks]
